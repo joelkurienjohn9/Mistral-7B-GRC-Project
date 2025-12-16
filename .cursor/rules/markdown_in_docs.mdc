@@ -1,0 +1,26 @@
+---
+description: Ensure all markdown files are stored in the docs folder
+globs: 
+  - '**/*.md'
+alwaysApply: true
+---
+
+# Markdown File Location Rules
+
+- **DO NOT** create markdown files unless explicitly requested by the user
+- **DO NOT** proactively generate documentation files (README, CHANGELOG, etc.)
+- **ALWAYS** place markdown files in the `docs/` directory
+- **Exception**: Root-level `README.md` is allowed for project overview
+
+## Valid Locations
+- ✅ `docs/DEPENDENCIES.md`
+- ✅ `docs/INSTALLATION.md`
+- ✅ `docs/CONTRIBUTING.md`
+- ✅ `README.md` (root only)
+
+## Invalid Locations
+- ❌ `src/README.md` → should be `docs/MODULE_NAME.md`
+- ❌ `CHANGELOG.md` → should be `docs/CHANGELOG.md`
+- ❌ `CONTRIBUTING.md` → should be `docs/CONTRIBUTING.md`
+
+Only create or modify markdown files when the user explicitly asks for documentation.

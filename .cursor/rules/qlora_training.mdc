@@ -1,0 +1,54 @@
+---
+description: QLoRA training specific guidelines and best practices
+globs: 
+  - '**/fintuning/**/*.py'
+  - '**/configs/qlora*.yml'
+alwaysApply: true
+---
+
+# QLoRA Training Rules
+
+Guidelines specific to QLoRA fine-tuning implementation.
+
+## Configuration Management
+- All training hyperparameters should be in `configs/qlora.yml`
+- Script should load config via environment variable: `QLORA_CONFIG`
+- Provide sensible defaults in the config file
+
+## Memory Optimization
+- Use 4-bit quantization (NF4) for large models
+- Enable gradient checkpointing for larger batch sizes
+- Use paged_adamw_8bit optimizer for QLoRA
+- Dynamic padding via DataCollator
+
+## Training Best Practices
+- Always split data into train/eval sets
+- Implement early stopping to prevent overfitting
+- Save checkpoints frequently (every 500 steps)
+- Use TensorBoard for monitoring by default
+- Support checkpoint resumption
+
+## Model Loading
+- Use BitsAndBytesConfig for quantization
+- Set appropriate compute_dtype (bfloat16 for modern GPUs)
+- Never include `device_map` in model_kwargs for single GPU
+- Prepare model for k-bit training before applying LoRA
+
+## LoRA Configuration
+- Typical rank (r): 8-16 for efficiency, 32-64 for quality
+- lora_alpha: typically same as rank or 2x rank
+- Target all attention and MLP projection layers
+- Keep lora_dropout low (0.05-0.1)
+
+## Data Format
+Support multiple JSONL formats:
+```json
+{"prompt": "...", "completion": "..."}
+{"input": "...", "output": "..."}
+{"text": "..."}
+```
+
+## Error Handling
+- Validate data before training starts
+- Check for empty or malformed examples
+- Provide clear error messages with context

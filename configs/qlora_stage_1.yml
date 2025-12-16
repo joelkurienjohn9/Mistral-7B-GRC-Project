@@ -1,0 +1,100 @@
+# Stage 1: IT Domain Foundation
+# Hardware: A6000 48GB | Quantization: 4-bit NF4
+# Dataset: ~41k examples | Goal: Broad IT knowledge base
+
+model:
+  name: "mistralai/Mistral-7B-Instruct-v0.3"
+  max_length: 1536
+
+data:
+  data_glob: "./data/training/it_general/*.jsonl"
+  eval_ratio: 0.05
+  num_proc: 4
+
+training:
+  output_dir: "./adapters/m-i-v0.3-4bit-nf4-it-train-2"  # Match existing checkpoint location
+  num_train_epochs: 2
+  
+  # Batch settings - Optimized for 48GB GPU (effective batch size = 16 × 4 = 64)
+  per_device_train_batch_size: 16  # Sweet spot for memory/speed balance
+  per_device_eval_batch_size: 32   # Safe evaluation batch size  
+  gradient_accumulation_steps: 4   # Maintain same effective batch as checkpoint
+  
+  # Evaluation & checkpointing
+  logging_steps: 10
+  eval_steps: 150
+  save_steps: 300
+  eval_strategy: "steps"
+  save_strategy: "steps"
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+  
+  # Optimization
+  learning_rate: 1.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.05
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  optim: "paged_adamw_8bit"
+  
+  # Precision & performance
+  bf16: true
+  bf16_full_eval: true
+  dataloader_num_workers: 8
+  dataloader_pin_memory: true
+  group_by_length: true
+  
+  # Distributed training (single GPU)
+  ddp_find_unused_parameters: false
+  local_rank: -1
+  
+  # Logging
+  report_to: "tensorboard"
+  logging_first_step: true
+
+# LoRA adapter configuration
+lora:
+  r: 16  # MUST match checkpoint (was trained with r=16)
+  lora_alpha: 32  # Scaling factor = 2.0
+  lora_dropout: 0.05
+  target_modules: 
+    - "q_proj"
+    - "v_proj"
+    - "k_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"
+
+# 4-bit quantization (BitsAndBytes)
+quantization:
+  load_in_4bit: true
+  bnb_4bit_compute_dtype: "bfloat16"
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_quant_type: "nf4"
+
+# Memory optimization
+memory:
+  use_gradient_checkpointing: true  # Must match checkpoint training
+  use_flash_attention: true
+  pad_to_multiple_of: 64
+
+# Early stopping
+early_stopping:
+  enabled: true
+  patience: 3
+  threshold: 0.001
+
+# Reproducibility
+seed: 42
+
+# Logging configuration
+logging:
+  level: "INFO"
+  log_file: "./logs/qlora.log"
+  rotation: "100 MB"
+  retention: "10 days"
+  colorize: true

@@ -1,0 +1,54 @@
+---
+description: Python code style and conventions for this project
+globs: 
+  - '**/*.py'
+alwaysApply: true
+---
+
+# Python Code Style Rules
+
+Follow these conventions when writing or modifying Python code in this project.
+
+## Import Organization
+Organize imports in three groups, separated by blank lines:
+```python
+# 1. Standard library imports
+import os
+import sys
+from pathlib import Path
+
+# 2. Third-party imports
+import torch
+from transformers import AutoTokenizer
+from datasets import load_dataset
+
+# 3. Local application imports
+from src.utils import helper_function
+```
+
+## Code Style
+- Follow PEP 8 conventions
+- Line length: 88 characters (Black formatter)
+- Use type hints where appropriate
+- Use descriptive variable names
+
+## Configuration Loading
+When loading configuration files, use this pattern:
+```python
+import yaml
+
+CONFIG_PATH = os.environ.get("CONFIG_NAME", "./configs/default.yml")
+with open(CONFIG_PATH, 'r') as f:
+    config = yaml.safe_load(f)
+```
+
+## PyTorch/ML Code
+- Clear CUDA cache after major operations: `torch.cuda.empty_cache()`
+- Use garbage collection: `gc.collect()`
+- Add informative print statements for training progress
+- Use consistent dtype: `torch.bfloat16` for modern GPUs
+
+## Documentation
+- Use docstrings for functions and classes
+- Add inline comments for complex logic
+- Document parameters and return types

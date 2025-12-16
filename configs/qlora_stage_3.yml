@@ -1,0 +1,102 @@
+# Stage 3: GRC Specialization (FINAL STAGE)
+# Hardware: L40 45GB | Quantization: 4-bit NF4 | 16k CUDA cores | OPTIMIZED FOR DEEP LEARNING
+# Dataset: 196k GRC examples | Builds on: Stage 1 IT + Stage 2 Cybersecurity
+# Goal: Deep knowledge integration while preserving previous stages
+
+model:
+  name: "mistralai/Mistral-7B-Instruct-v0.3"
+  max_length: 320  # Optimized for speed (your 95th percentile: 253, mean: 185)
+
+data:
+  data_glob: "./data/GRC-Dataset-Gpt4.1-nano-dataset/*.jsonl"
+  eval_ratio: 0.02  # Slightly larger eval set for better monitoring
+  num_proc: 20  # Increased for faster data processing
+
+training:
+  output_dir: "./adapters/stage3_grc_adapter"
+  num_train_epochs: 2  # Increased for deeper learning (final stage needs thorough training)
+  
+  # Batch settings (effective batch size = 20 × 4 = 80, optimized for merged adapters)
+  per_device_train_batch_size: 20  # Conservative for stable performance with merged adapters
+  per_device_eval_batch_size: 40   # Large eval batch (no backprop, can be larger)
+  gradient_accumulation_steps: 4   # Maintains good effective batch size
+  
+  # Evaluation & checkpointing (frequent monitoring for quality assurance)
+  logging_steps: 25
+  eval_steps: 50  # Regular evaluation to monitor knowledge retention
+  save_steps: 300  # Save checkpoints for recovery
+  eval_strategy: "steps"
+  save_strategy: "steps"
+  save_total_limit: 3  # Keep 3 checkpoints to track progression
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+  
+  # Optimization (balanced for deep learning while preserving previous stages)
+  learning_rate: 7.0e-5  # Balanced LR for speed + knowledge preservation
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.05  # Moderate warmup to protect previous stage knowledge
+  weight_decay: 0.03  # Slightly higher to prevent overfitting on final stage
+  max_grad_norm: 0.5
+  optim: "paged_adamw_8bit"
+  
+  # Precision & performance
+  bf16: true
+  bf16_full_eval: true
+  dataloader_num_workers: 12  # Reduced to prevent CPU bottleneck
+  dataloader_pin_memory: true
+  group_by_length: true
+  dataloader_prefetch_factor: 2  # Prefetch for faster data loading
+  
+  # Distributed training (single GPU)
+  ddp_find_unused_parameters: false
+  local_rank: -1
+  
+  # Logging
+  report_to: "tensorboard"
+  logging_first_step: true
+
+# LoRA adapter configuration (balanced for speed + deep learning with merged adapters)
+lora:
+  r: 24  # Balanced rank for speed with merged adapters (still good capacity)
+  lora_alpha: 48  # Scaled with rank (2x ratio maintained)
+  lora_dropout: 0.10  # Moderate dropout to preserve previous stage knowledge
+  target_modules: 
+    - "q_proj"
+    - "v_proj"
+    - "k_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"
+
+# 4-bit quantization (BitsAndBytes)
+quantization:
+  load_in_4bit: true
+  bnb_4bit_compute_dtype: "bfloat16"
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_quant_type: "nf4"
+
+# Memory optimization
+memory:
+  use_gradient_checkpointing: true
+  use_flash_attention: true
+  pad_to_multiple_of: 64
+
+# Early stopping (prevent overfitting while ensuring deep learning)
+early_stopping:
+  enabled: true
+  patience: 5  # Allow thorough learning on large GRC dataset
+  threshold: 0.0008  # Stricter threshold for quality final stage
+
+# Reproducibility
+seed: 42
+
+# Logging configuration
+logging:
+  level: "INFO"
+  log_file: "./logs/qlora.log"
+  rotation: "100 MB"
+  retention: "10 days"
+  colorize: true

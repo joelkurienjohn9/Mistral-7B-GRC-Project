@@ -1,0 +1,40 @@
+---
+description: Use pyproject.toml as single source of truth for dependencies
+globs: 
+  - '**/pyproject.toml'
+  - '**/requirements*.txt'
+  - '**/setup.py'
+alwaysApply: true
+---
+
+# Dependency Management Rules
+
+## Primary Rule
+- **ALWAYS** use `pyproject.toml` as the single source of truth for dependencies
+- **NEVER** create `requirements.txt`, `requirements-dev.txt`, or similar files
+
+## Dependency Organization in pyproject.toml
+
+### Core Dependencies
+Place in `[project.dependencies]` section:
+```toml
+dependencies = [
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    # ... other core deps
+]
+```
+
+### Optional Dependencies
+Place in `[project.optional-dependencies]` section:
+```toml
+[project.optional-dependencies]
+dev = ["pytest>=7.4.0", "black>=23.0.0"]
+flash-attn = ["flash-attn>=2.0.0"]
+```
+
+## Installation Commands
+Users should install with:
+- `pip install -e .` (core only)
+- `pip install -e ".[dev]"` (with optional groups)
+- `pip install -e ".[all]"` (everything)

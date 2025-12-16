@@ -1,0 +1,22 @@
+---
+description: Prevent generation or modification of test files unless explicitly requested
+globs: 
+  - '**/*.test.py'
+  - '**/*.test.js'
+  - '**/*.spec.py'
+  - '**/*.spec.js'
+  - '**/test_*.py'
+  - '**/tests/**'
+alwaysApply: true
+---
+
+# Test File Rules
+
+- **DO NOT** create, update, or modify test files unless the user explicitly requests it
+- **DO NOT** proactively suggest writing tests or generating test cases
+- Only work on test files when the user specifically asks with phrases like:
+  - "write tests"
+  - "create tests"
+  - "add unit tests"
+  - "generate test cases"
+- User's explicit request overrides this rule

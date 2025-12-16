@@ -1,0 +1,101 @@
+# Stage 2: Cybersecurity Specialization
+# Hardware: L40 45GB | Quantization: 4-bit NF4 | 16k CUDA cores | OPTIMIZED FOR SPEED
+# Dataset: ~10-30k examples | Builds on: Stage 1 IT foundation
+# Note: Use --adapters flag or interactive mode to chain Stage 1 adapter
+
+model:
+  name: "mistralai/Mistral-7B-Instruct-v0.3"
+  max_length: 512  # Reduced from 1536 (optimized for typical sequence lengths)
+
+data:
+  data_glob: "./data/training/cybersecurity/*.jsonl"
+  eval_ratio: 0.02  # Minimal eval set for fastest training
+  num_proc: 20  # Increased for faster data processing
+
+training:
+  output_dir: "./adapters/stage2_cybersecurity_adapter"
+  num_train_epochs: 2  # Reduced from 3 for faster training
+  
+  # Batch settings (effective batch size = 24 × 4 = 96, optimized for speed)
+  per_device_train_batch_size: 24  # Balanced for speed with merged adapters
+  per_device_eval_batch_size: 48   # Large eval batch (no backprop, can be larger)
+  gradient_accumulation_steps: 4   # Maintains good effective batch size
+  
+  # Evaluation & checkpointing (optimized for maximum speed)
+  logging_steps: 20  # Less frequent logging for speed
+  eval_steps: 250  # Less frequent eval for maximum training speed
+  save_steps: 500  # Less frequent saves for maximum training speed
+  eval_strategy: "steps"
+  save_strategy: "steps"
+  save_total_limit: 2  # Keep only 2 checkpoints to save disk I/O
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+  
+  # Optimization (faster convergence while preserving foundation)
+  learning_rate: 1.0e-4  # Increased for faster convergence with larger batch size
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.03  # Minimal warmup for faster training
+  weight_decay: 0.02
+  max_grad_norm: 0.5
+  optim: "paged_adamw_8bit"
+  
+  # Precision & performance
+  bf16: true
+  bf16_full_eval: true
+  dataloader_num_workers: 16  # Maximized for L40 system (16 CUDA cores per SM)
+  dataloader_pin_memory: true
+  group_by_length: true
+  
+  # Distributed training (single GPU)
+  ddp_find_unused_parameters: false
+  local_rank: -1
+  
+  # Logging
+  report_to: "tensorboard"
+  logging_first_step: true
+
+# LoRA adapter configuration (balanced for speed and quality)
+lora:
+  r: 24  # Balanced between 16 and 32 for speed
+  lora_alpha: 48  # Scaled with rank (2x ratio maintained)
+  lora_dropout: 0.08  # Slightly reduced for faster convergence
+  target_modules: 
+    - "q_proj"
+    - "v_proj"
+    - "k_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"
+
+# 4-bit quantization (BitsAndBytes)
+quantization:
+  load_in_4bit: true
+  bnb_4bit_compute_dtype: "bfloat16"
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_quant_type: "nf4"
+
+# Memory optimization
+memory:
+  use_gradient_checkpointing: true
+  use_flash_attention: true
+  pad_to_multiple_of: 64
+
+# Early stopping (prevent overfitting on specialized data)
+early_stopping:
+  enabled: true
+  patience: 4  # Slightly increased to allow more training
+  threshold: 0.002  # More permissive threshold for faster convergence
+
+# Reproducibility
+seed: 42
+
+# Logging configuration
+logging:
+  level: "INFO"
+  log_file: "./logs/qlora.log"
+  rotation: "100 MB"
+  retention: "10 days"
+  colorize: true

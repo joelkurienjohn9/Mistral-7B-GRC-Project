@@ -1,0 +1,52 @@
+---
+description: Maintain proper project directory structure
+globs: '**/*'
+alwaysApply: true
+---
+
+# Project Structure Rules
+
+Follow the established project structure when creating or modifying files.
+
+## Directory Organization
+
+```
+mistral-b-grc/
+├── src/                      # Python source code only
+│   └── fintuning/           # Fine-tuning modules
+├── configs/                  # YAML configuration files
+├── docs/                     # ALL documentation (*.md)
+├── notebooks/                # Jupyter notebooks
+├── training_dataset/         # JSONL training data
+├── data/                     # Data storage
+│   ├── raw/                 # Raw datasets
+│   ├── processed/           # Processed datasets
+│   └── models/              # Trained models
+├── scripts/                  # Setup and utility scripts
+├── tests/                    # Test files (modify only when requested)
+├── .cursor/                  # Cursor IDE configuration
+│   └── rules/               # Rule files (.mdc)
+└── pyproject.toml           # Project config and dependencies
+```
+
+## File Placement Rules
+
+| File Type | Location |
+|-----------|----------|
+| Python source code | `src/` |
+| Configuration files (YAML) | `configs/` |
+| Documentation (Markdown) | `docs/` (except root README.md) |
+| Jupyter notebooks | `notebooks/` |
+| Training data (JSONL) | `training_dataset/` |
+| Test files | `tests/` |
+| Setup scripts | `scripts/` |
+
+## Configuration Files
+- Use YAML format (`.yml` or `.yaml`)
+- Place in `configs/` directory
+- Name descriptively (e.g., `qlora.yml`, `training.yml`)
+
+## When Creating New Files
+1. Determine the correct directory based on file type
+2. Follow existing naming conventions
+3. Update relevant documentation if needed (only when explicitly requested)
