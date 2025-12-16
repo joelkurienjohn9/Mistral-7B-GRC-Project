@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=75.0.0", "wheel>=0.45.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-finetuning-project"
+version = "0.1.0"
+description = "QLoRA fine-tuning for LLMs"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+
+dependencies = [
+    # Core ML dependencies
+    "torch>=2.8.0",
+    "torchvision>=0.21.0",
+    "torchaudio>=2.8.0",
+    "transformers>=4.57.0",
+    "datasets>=3.3.0",
+    "accelerate>=1.5.0",
+    "peft>=0.17.0",
+    "bitsandbytes>=0.45.0",
+    
+    # Model utilities
+    "safetensors>=0.5.0",
+    "huggingface_hub>=0.28.0",
+    "sentencepiece>=0.2.0",
+    "protobuf>=5.29.0",
+    
+    # Configuration and CLI
+    "pyyaml>=6.0.2",
+    "loguru>=0.7.3",
+    "click>=8.1.8",
+    "nltk>=3.9.1",
+    "hf_transfer>=0.1.9",
+
+    # Evaluation
+    "evaluate>=0.4.3",
+    "rouge_score>=0.1.2",
+    "bert_score>=0.3.13",
+    
+    # Monitoring and visualization
+    "tensorboard>=2.19.0",
+    "tensorboardX>=2.6.2.2",
+]
+
+[project.optional-dependencies]
+# Development tools (optional)
+dev = [
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+]
+
+# All optional dependencies for easier installation
+all = [
+    "ai-finetuning-project[dev]",
+]
+
+[project.scripts]
+ai-train = "src.cli:train_command"
+ai-eval = "src.cli:eval_command"
+ai-infer = "src.cli:infer_command"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

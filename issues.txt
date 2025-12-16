@@ -1,0 +1,1 @@
+the setup script is not using the toml file so not all the dependencies are installebd directly and needs pip install . to install the missinng libs
